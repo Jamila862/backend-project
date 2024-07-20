@@ -11,69 +11,71 @@ import java.util.List;
 import java.util.Optional;
 
 @RestController
-@CrossOrigin(origins ="http://localhost:3000")
-@RequestMapping
+@CrossOrigin(origins = "http://localhost:3000")
+@RequestMapping("/api/managers") // Base path for all endpoints related to managers
 public class ManagersAPI {
+
     @Autowired
     private ManagersRepo managersRepo;
 
-    @PostMapping
-    public ResponseEntity<?> addManagers(@RequestBody Managers managers){
+    @PostMapping("/add")
+    public ResponseEntity<?> addManagers(@RequestBody Managers managers) {
         try {
-            Managers managers1 = managersRepo.save(managers);
-            return  new ResponseEntity<>(managers1, HttpStatus.OK);
-        }catch (Exception exception){
-            return  new ResponseEntity<>("Something went wrong", HttpStatus.BAD_REQUEST);
+            Managers savedManager = managersRepo.save(managers);
+            return new ResponseEntity<>(savedManager, HttpStatus.OK);
+        } catch (Exception e) {
+            return new ResponseEntity<>("Failed to add manager", HttpStatus.BAD_REQUEST);
         }
     }
 
-    @DeleteMapping("Delete/managers{Id}")
-    public ResponseEntity<?> deleteManagers(@PathVariable int Id){
+    @DeleteMapping("/delete/{id}")
+    public ResponseEntity<?> deleteManagers(@PathVariable("id") int id) {
         try {
-            managersRepo.deleteById(Id);
-            return new ResponseEntity<>("managers delete successfully",HttpStatus.OK);
-        }catch (Exception exception){
-            return  new ResponseEntity<>("Something went wrong", HttpStatus.BAD_REQUEST);
+            managersRepo.deleteById(id);
+            return new ResponseEntity<>("Manager deleted successfully", HttpStatus.OK);
+        } catch (Exception e) {
+            return new ResponseEntity<>("Failed to delete manager", HttpStatus.BAD_REQUEST);
         }
     }
 
-    @GetMapping("all/managers")
-    public ResponseEntity<?>get(){
+    @GetMapping("/all")
+    public ResponseEntity<?> getAllManagers() {
         try {
-            List<Managers>managersList = managersRepo.findAll();
-            if (managersList.isEmpty()){
-                return new ResponseEntity<>("Managers is not found", HttpStatus.NOT_FOUND);
-            }else {
-                return  new ResponseEntity<>(managersList,HttpStatus.OK);
+            List<Managers> managersList = managersRepo.findAll();
+            if (managersList.isEmpty()) {
+                return new ResponseEntity<>("No managers found", HttpStatus.NOT_FOUND);
+            } else {
+                return new ResponseEntity<>(managersList, HttpStatus.OK);
             }
-        }catch (Exception exception){
-            return  new ResponseEntity<>("Something went wrong",HttpStatus.BAD_REQUEST);
+        } catch (Exception e) {
+            return new ResponseEntity<>("Failed to fetch managers", HttpStatus.BAD_REQUEST);
         }
     }
-    @PutMapping("Update/managers{Id}")
-    public ResponseEntity<?>updateManagers(@PathVariable int Id,@RequestBody Managers updateManagers){
-        Optional<Managers> managersOptional = managersRepo.findById(Id);
-        if (managersOptional.isPresent()){
-            Managers managers = managersOptional.get();
-            managers.setId(updateManagers.getId());
-            managers.setUsername(updateManagers.getUsername());
-            managersRepo.save(managers);
-            return  new ResponseEntity<>(managers, HttpStatus.OK);
-        }else {
-            return new ResponseEntity<>("Managers is not found",HttpStatus.NOT_FOUND);
+
+    @PutMapping("/update/{id}")
+    public ResponseEntity<?> updateManagers(@PathVariable("id") int id, @RequestBody Managers updatedManager) {
+        Optional<Managers> managerOptional = managersRepo.findById(id);
+        if (managerOptional.isPresent()) {
+            Managers manager = managerOptional.get();
+            manager.setUsername(updatedManager.getUsername());
+            try {
+                Managers savedManager = managersRepo.save(manager);
+                return new ResponseEntity<>(savedManager, HttpStatus.OK);
+            } catch (Exception e) {
+                return new ResponseEntity<>("Failed to update manager", HttpStatus.BAD_REQUEST);
+            }
+        } else {
+            return new ResponseEntity<>("Manager not found", HttpStatus.NOT_FOUND);
         }
     }
-    @GetMapping("getmanagers{Id}")
-    public ResponseEntity<?> getId(@PathVariable int Id){
-        try {
-            Optional<Managers> optionalManagers = managersRepo.findById(Id);
-            if (optionalManagers.isPresent()){
-                return  new ResponseEntity<>(optionalManagers, HttpStatus.OK);
-            }else {
-                return  new ResponseEntity<>("Managers is not found",HttpStatus.NOT_FOUND);
-            }
-        }catch (Exception exception){
-            return  new ResponseEntity<>("Something went wrong",HttpStatus.BAD_REQUEST);
+
+    @GetMapping("/{id}")
+    public ResponseEntity<?> getManagerById(@PathVariable("id") int id) {
+        Optional<Managers> managerOptional = managersRepo.findById(id);
+        if (managerOptional.isPresent()) {
+            return new ResponseEntity<>(managerOptional.get(), HttpStatus.OK);
+        } else {
+            return new ResponseEntity<>("Manager not found", HttpStatus.NOT_FOUND);
         }
     }
 }

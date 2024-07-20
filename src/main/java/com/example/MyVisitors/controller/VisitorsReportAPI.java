@@ -11,69 +11,69 @@ import java.util.List;
 import java.util.Optional;
 
 @RestController
-@CrossOrigin(origins = "http://localhost:3000")
-@RequestMapping
+@CrossOrigin(origins = "http://localhost:3000") // Replace with your frontend URL
+@RequestMapping("/api")
 public class VisitorsReportAPI {
+
     @Autowired
     private VisitorsReportRepo visitorsReportRepo;
 
-    @PostMapping("add/visitorsReport")
-    public ResponseEntity<?>addVisitorsReport(@RequestBody VisitorsReport visitorsReport){
+    @PostMapping("/add/visitorsReport")
+    public ResponseEntity<VisitorsReport> addVisitorsReport(@RequestBody VisitorsReport visitorsReport) {
         try {
-            VisitorsReport visitorsReport1 = visitorsReportRepo.save(visitorsReport);
-            return  new ResponseEntity<>(visitorsReport1, HttpStatus.OK);
-        }catch (Exception exception){
-            return new ResponseEntity<>("Something went wrong",HttpStatus.BAD_REQUEST);
-        }
-    }
-    @GetMapping("all/visitorsReport")
-    public ResponseEntity<?> get(){
-        try {
-            List<VisitorsReport>visitorsReportList = visitorsReportRepo.findAll();
-            if (visitorsReportList.isEmpty()){
-                return new ResponseEntity<>("VisitorsReport is not found",HttpStatus.NOT_FOUND);
-            }else {
-                return new ResponseEntity<>(visitorsReportList,HttpStatus.OK);
-            }
-        }catch (Exception exception){
-            return new ResponseEntity<>("Something went wrong",HttpStatus.BAD_REQUEST);
+            VisitorsReport newVisitor = visitorsReportRepo.save(visitorsReport);
+            return new ResponseEntity<>(newVisitor, HttpStatus.CREATED);
+        } catch (Exception e) {
+            return new ResponseEntity<>(null, HttpStatus.INTERNAL_SERVER_ERROR);
         }
     }
 
-    @DeleteMapping("Delete/visitorsReport{Id}")
-    public ResponseEntity<?>deleteVisitorsReport(@PathVariable int Id){
+    @GetMapping("/all/visitorsReport")
+    public ResponseEntity<List<VisitorsReport>> getAllVisitorsReport() {
         try {
-            visitorsReportRepo.deleteById(Id);
-            return new ResponseEntity<>("VisitorsReport delete successfully",HttpStatus.OK);
-        }catch (Exception exception){
-            return new ResponseEntity<>("Something went wrong",HttpStatus.BAD_REQUEST);
+            List<VisitorsReport> visitorsReports = visitorsReportRepo.findAll();
+            if (visitorsReports.isEmpty()) {
+                return new ResponseEntity<>(HttpStatus.NO_CONTENT);
+            }
+            return new ResponseEntity<>(visitorsReports, HttpStatus.OK);
+        } catch (Exception e) {
+            return new ResponseEntity<>(null, HttpStatus.INTERNAL_SERVER_ERROR);
         }
     }
-    @PutMapping("Update/VisitorsReport{Id}")
-    public ResponseEntity<?>updateVisitorsReport(@PathVariable int Id,@RequestBody VisitorsReport updateVisitorsReport){
-        Optional<VisitorsReport>visitorsReportOptional = visitorsReportRepo.findById(Id);
-        if (visitorsReportOptional.isPresent()){
-            VisitorsReport visitorsReport = visitorsReportOptional.get();
-            visitorsReport.setId(updateVisitorsReport.getId());
+
+    @DeleteMapping("/delete/visitorsReport/{id}")
+    public ResponseEntity<HttpStatus> deleteVisitorsReport(@PathVariable("id") int id) {
+        try {
+            visitorsReportRepo.deleteById(id);
+            return new ResponseEntity<>(HttpStatus.NO_CONTENT);
+        } catch (Exception e) {
+            return new ResponseEntity<>(HttpStatus.INTERNAL_SERVER_ERROR);
+        }
+    }
+
+    @PutMapping("/update/visitorsReport/{id}")
+    public ResponseEntity<VisitorsReport> updateVisitorsReport(@PathVariable("id") int id, @RequestBody VisitorsReport updateVisitorsReport) {
+        Optional<VisitorsReport> optionalVisitorsReport = visitorsReportRepo.findById(id);
+        if (optionalVisitorsReport.isPresent()) {
+            VisitorsReport visitorsReport = optionalVisitorsReport.get();
             visitorsReport.setFirstName(updateVisitorsReport.getFirstName());
-            visitorsReportRepo.save(visitorsReport);
-            return  new ResponseEntity<>(visitorsReport,HttpStatus.OK);
-        }else {
-            return new ResponseEntity<>("VisitorsReport is not found",HttpStatus.NOT_FOUND);
+            visitorsReport.setLastName(updateVisitorsReport.getLastName());
+            visitorsReport.setPhoneNumber(updateVisitorsReport.getPhoneNumber());
+            visitorsReport.setEmail(updateVisitorsReport.getEmail());
+            visitorsReport.setRoom(updateVisitorsReport.getRoom());
+            visitorsReport.setDate(updateVisitorsReport.getDate());
+
+            return new ResponseEntity<>(visitorsReportRepo.save(visitorsReport), HttpStatus.OK);
+        } else {
+            return new ResponseEntity<>(HttpStatus.NOT_FOUND);
         }
     }
 
-    @GetMapping("getVisitorsReport{Id}")
-    public ResponseEntity<?>getId(@PathVariable int Id){
-        try {
-            Optional<VisitorsReport> optionalVisitorsReport = visitorsReportRepo.findById(Id);
-            if (optionalVisitorsReport.isPresent()) {
-                return new ResponseEntity<>(optionalVisitorsReport,HttpStatus.OK);
-            }else {
-                return new ResponseEntity<>("visitorsReport is not found",HttpStatus.NOT_FOUND);
-            }
-        }catch (Exception exception){
-            return new ResponseEntity<>("Something went wrong",HttpStatus.BAD_REQUEST);
-        }
+    @GetMapping("/get/visitorsReport/{id}")
+    public ResponseEntity<VisitorsReport> getVisitorsReportById(@PathVariable("id") int id) {
+        Optional<VisitorsReport> visitorsReportData = visitorsReportRepo.findById(id);
+
+        return visitorsReportData.map(report -> new ResponseEntity<>(report, HttpStatus.OK))
+                .orElseGet(() -> new ResponseEntity<>(HttpStatus.NOT_FOUND));
     }
 }
